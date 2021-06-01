@@ -10,9 +10,9 @@
 //! Resources are set and removed by an Admin account or by root.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use sp_runtime::traits::{BadOrigin};
+use frame_support::traits::EnsureOrigin;
 use frame_system::ensure_root;
-use frame_support::{traits::{EnsureOrigin}};
+use sp_runtime::traits::BadOrigin;
 
 // Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
@@ -29,9 +29,9 @@ pub use weights::*;
 #[frame_support::pallet]
 pub mod pallet {
     // Import various types used to declare pallet in scope.
+    use super::*;
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
-    use super::*;
 
     // Simple declaration of the `Pallet` type. It is placeholder we use to implement traits and
     // method.
@@ -46,10 +46,20 @@ pub mod pallet {
         /// tokenY on chain B, or to simply associate that some action performed on chain A should
         /// result in some other action occurring on chain B. ResourceId is defined as a 32 byte array
         /// by ChainSafe.
-        type ResourceId: Parameter + Member + MaybeSerializeDeserialize + Default + Into<[u8; 32]> + From<[u8; 32]>;
+        type ResourceId: Parameter
+            + Member
+            + MaybeSerializeDeserialize
+            + Default
+            + Into<[u8; 32]>
+            + From<[u8; 32]>;
         /// A local mapping of a resource id. Represents anything that a resource id might map to. On
         /// Ethereum, this may be a contract address for transferring assets.
-        type Address: Parameter + Member + MaybeSerializeDeserialize + Default + Into<[u8; 32]> + From<[u8; 32]>;
+        type Address: Parameter
+            + Member
+            + MaybeSerializeDeserialize
+            + Default
+            + Into<[u8; 32]>
+            + From<[u8; 32]>;
         /// Admin is able to set/remove resource mappings.
         type AdminOrigin: EnsureOrigin<Self::Origin>;
         /// Type representing the weight of this pallet
@@ -61,7 +71,7 @@ pub mod pallet {
 
     // The genesis config type.
     #[pallet::genesis_config]
-    pub struct GenesisConfig{}
+    pub struct GenesisConfig {}
 
     // The default value for the genesis config type.
     #[cfg(feature = "std")]
@@ -73,7 +83,7 @@ pub mod pallet {
 
     // The build of genesis for the pallet.
     #[pallet::genesis_build]
-    impl <T: Config> GenesisBuild<T> for GenesisConfig {
+    impl<T: Config> GenesisBuild<T> for GenesisConfig {
         fn build(&self) {}
     }
 
@@ -81,20 +91,26 @@ pub mod pallet {
     /// Maps an abstract resource id to a chain-specific address
     #[pallet::storage]
     #[pallet::getter(fn addr_of)]
-    pub(super) type ResourceToAddress<T: Config> = StorageMap<_, Blake2_128Concat, T::ResourceId, T::Address>;
+    pub(super) type ResourceToAddress<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::ResourceId, T::Address>;
 
     /// Maps a chain-specific address to a resource id. A mapping in [ResourceToAddress] will
     /// always correspond to a mapping here. Resources and addresses are 1 to 1.
     #[pallet::storage]
     #[pallet::getter(fn name_of)]
-    pub(super) type AddressToResource<T: Config> = StorageMap<_, Blake2_128Concat, T::Address, T::ResourceId>;
+    pub(super) type AddressToResource<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::Address, T::ResourceId>;
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Set a resource mapping in the [Names]. Existing keys will be overwritten.
         /// The caller must be the owner of the `rid` ResourceId.
         #[pallet::weight(<T as pallet::Config>::WeightInfo::set())]
-        pub (super) fn set(origin: OriginFor<T>, rid: T::ResourceId, local_addr: T::Address) -> DispatchResult {
+        pub(super) fn set(
+            origin: OriginFor<T>,
+            rid: T::ResourceId,
+            local_addr: T::Address,
+        ) -> DispatchResult {
             Self::ensure_admin_or_root(origin)?;
 
             // Call internal
@@ -103,7 +119,7 @@ pub mod pallet {
         }
 
         #[pallet::weight(<T as pallet::Config>::WeightInfo::remove())]
-        pub (super) fn remove(origin: OriginFor<T>, rid: T::ResourceId) -> DispatchResult {
+        pub(super) fn remove(origin: OriginFor<T>, rid: T::ResourceId) -> DispatchResult {
             Self::ensure_admin_or_root(origin)?;
 
             // Call internal

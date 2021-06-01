@@ -4,11 +4,11 @@
 //! Fees are set by FeeOrigin or RootOrigin
 #![cfg_attr(not(feature = "std"), no_std)]
 use codec::{Decode, Encode};
-use frame_system::ensure_root;
 use frame_support::{
-    traits::{EnsureOrigin, Currency, ExistenceRequirement, WithdrawReasons},
     dispatch::DispatchResult,
+    traits::{Currency, EnsureOrigin, ExistenceRequirement, WithdrawReasons},
 };
+use frame_system::ensure_root;
 
 pub use pallet::*;
 pub mod weights;
@@ -27,14 +27,15 @@ pub struct Fee<Hash, Balance> {
     price: Balance,
 }
 
-pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+pub type BalanceOf<T> =
+    <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[frame_support::pallet]
 pub mod pallet {
     // Import various types used to declare pallet in scope.
+    use super::*;
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
-    use super::*;
 
     // Simple declaration of the `Pallet` type. It is placeholder we use to implement traits and
     // method.
@@ -59,8 +60,8 @@ pub mod pallet {
 
     // The genesis config type.
     #[pallet::genesis_config]
-    pub struct GenesisConfig<T: Config>{
-        pub initial_fees: Vec<(T::Hash, BalanceOf<T>)>
+    pub struct GenesisConfig<T: Config> {
+        pub initial_fees: Vec<(T::Hash, BalanceOf<T>)>,
     }
 
     // The default value for the genesis config type.
@@ -68,16 +69,16 @@ pub mod pallet {
     impl<T: Config> Default for GenesisConfig<T> {
         fn default() -> Self {
             Self {
-                initial_fees: Default::default()
+                initial_fees: Default::default(),
             }
         }
     }
 
     // The build of genesis for the pallet.
     #[pallet::genesis_build]
-    impl <T: Config> GenesisBuild<T> for GenesisConfig<T> {
+    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
         fn build(&self) {
-            for fee in self.initial_fees.iter(){
+            for fee in self.initial_fees.iter() {
                 <Pallet<T>>::change_fee(fee.0, fee.1);
             }
         }
@@ -86,7 +87,8 @@ pub mod pallet {
     /// Stores the Fees associated with a Hash identifier
     #[pallet::storage]
     #[pallet::getter(fn fee)]
-    pub(super) type Fees<T: Config> = StorageMap<_, Blake2_256, T::Hash, Fee<T::Hash, BalanceOf<T>>>;
+    pub(super) type Fees<T: Config> =
+        StorageMap<_, Blake2_256, T::Hash, Fee<T::Hash, BalanceOf<T>>>;
 
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -97,14 +99,18 @@ pub mod pallet {
     #[pallet::error]
     pub enum Error<T> {
         /// Fee associated to given key not found
-        FeeNotFoundForKey
+        FeeNotFoundForKey,
     }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Set the given fee for the key
         #[pallet::weight(<T as pallet::Config>::WeightInfo::set_fee())]
-        pub fn set_fee(origin: OriginFor<T>, key: T::Hash, new_price: BalanceOf<T>) -> DispatchResult {
+        pub fn set_fee(
+            origin: OriginFor<T>,
+            key: T::Hash,
+            new_price: BalanceOf<T>,
+        ) -> DispatchResult {
             Self::can_change_fee(origin)?;
             Self::change_fee(key, new_price);
             Self::deposit_event(Event::FeeChanged(key, new_price));
@@ -112,7 +118,6 @@ pub mod pallet {
         }
     }
 }
-
 
 impl<T: Config> Pallet<T> {
     /// Called by any other module who wants to trigger a fee payment for a given account.

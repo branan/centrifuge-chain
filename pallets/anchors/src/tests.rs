@@ -1,15 +1,13 @@
+use crate::common;
 use crate::{mock::*, PRE_COMMIT_EXPIRATION_DURATION_BLOCKS};
-use frame_support::{
-    assert_ok, assert_noop,
-};
+use codec::Encode;
+use frame_support::dispatch::DispatchError;
+use frame_support::traits::Randomness;
+use frame_support::{assert_noop, assert_ok};
+use sp_core::H256;
 use sp_runtime::traits::BadOrigin;
 use sp_runtime::traits::Hash;
-use crate::common;
-use codec::Encode;
-use sp_core::H256;
-use frame_support::traits::Randomness;
 use std::time::Instant;
-use frame_support::dispatch::DispatchError;
 
 #[test]
 fn basic_pre_commit() {
@@ -22,7 +20,6 @@ fn basic_pre_commit() {
             Anchors::pre_commit(Origin::none(), anchor_id, signing_root),
             BadOrigin
         );
-
 
         // happy
         assert_ok!(Anchors::pre_commit(
@@ -49,7 +46,11 @@ fn pre_commit_fail_anchor_exists() {
         let anchor_id = (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
         let signing_root = <Test as frame_system::Config>::Hashing::hash_of(&0);
 
-        assert_eq!(Anchors::get_latest_anchor_index().unwrap_or_default(), 0, "latest index must be 0");
+        assert_eq!(
+            Anchors::get_latest_anchor_index().unwrap_or_default(),
+            0,
+            "latest index must be 0"
+        );
         // anchor
         assert_ok!(Anchors::commit(
             Origin::signed(1),
@@ -59,15 +60,29 @@ fn pre_commit_fail_anchor_exists() {
             common::MS_PER_DAY + 1
         ));
 
-
-        assert_eq!(Anchors::get_latest_anchor_index().unwrap_or_default(), 1, "latest index must be 1");
-        assert_eq!(Anchors::get_anchor_id_by_index(1).unwrap(), anchor_id, "anchor_id must exists");
-        assert!(Anchors::get_anchor_by_id(anchor_id).is_some(), "anchor data must exist");
+        assert_eq!(
+            Anchors::get_latest_anchor_index().unwrap_or_default(),
+            1,
+            "latest index must be 1"
+        );
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(1).unwrap(),
+            anchor_id,
+            "anchor_id must exists"
+        );
+        assert!(
+            Anchors::get_anchor_by_id(anchor_id).is_some(),
+            "anchor data must exist"
+        );
 
         // fails because of existing anchor
         assert_noop!(
             Anchors::pre_commit(Origin::signed(1), anchor_id, signing_root),
-            DispatchError::Module{ index: 5, error: 0, message: Some("AnchorAlreadyExists") }
+            DispatchError::Module {
+                index: 5,
+                error: 0,
+                message: Some("AnchorAlreadyExists")
+            }
         );
     });
 }
@@ -90,7 +105,11 @@ fn pre_commit_fail_anchor_exists_different_acc() {
         // fails because of existing anchor
         assert_noop!(
             Anchors::pre_commit(Origin::signed(1), anchor_id, signing_root),
-            DispatchError::Module{ index: 5, error: 0, message: Some("AnchorAlreadyExists") }
+            DispatchError::Module {
+                index: 5,
+                error: 0,
+                message: Some("AnchorAlreadyExists")
+            }
         );
     });
 }
@@ -118,7 +137,11 @@ fn pre_commit_fail_pre_commit_exists() {
         // fail, pre-commit exists
         assert_noop!(
             Anchors::pre_commit(Origin::signed(1), anchor_id, signing_root),
-            DispatchError::Module{ index: 5, error: 4, message: Some("PreCommitAlreadyExists") }
+            DispatchError::Module {
+                index: 5,
+                error: 4,
+                message: Some("PreCommitAlreadyExists")
+            }
         );
 
         // expire the pre-commit
@@ -154,7 +177,11 @@ fn pre_commit_fail_pre_commit_exists_different_acc() {
         // fail, pre-commit exists
         assert_noop!(
             Anchors::pre_commit(Origin::signed(2), anchor_id, signing_root),
-            DispatchError::Module{ index: 5, error: 4, message: Some("PreCommitAlreadyExists") }
+            DispatchError::Module {
+                index: 5,
+                error: 4,
+                message: Some("PreCommitAlreadyExists")
+            }
         );
 
         // expire the pre-commit
@@ -233,7 +260,11 @@ fn basic_commit() {
                 <Test as frame_system::Config>::Hashing::hash_of(&0),
                 2 // some arbitrary store until date that is less than the required minimum
             ),
-            DispatchError::Module{ index: 5, error: 1, message: Some("AnchorStoreDateInPast") }
+            DispatchError::Module {
+                index: 5,
+                error: 1,
+                message: Some("AnchorStoreDateInPast")
+            }
         );
     });
 }
@@ -266,7 +297,11 @@ fn commit_fail_anchor_exists() {
                 <Test as frame_system::Config>::Hashing::hash_of(&0),
                 common::MS_PER_DAY + 1
             ),
-            DispatchError::Module{ index: 5, error: 0, message: Some("AnchorAlreadyExists") }
+            DispatchError::Module {
+                index: 5,
+                error: 0,
+                message: Some("AnchorAlreadyExists")
+            }
         );
 
         // different acc
@@ -278,7 +313,11 @@ fn commit_fail_anchor_exists() {
                 <Test as frame_system::Config>::Hashing::hash_of(&0),
                 common::MS_PER_DAY + 1
             ),
-            DispatchError::Module{ index: 5, error: 0, message: Some("AnchorAlreadyExists") }
+            DispatchError::Module {
+                index: 5,
+                error: 0,
+                message: Some("AnchorAlreadyExists")
+            }
         );
     });
 }
@@ -307,7 +346,11 @@ fn basic_pre_commit_commit() {
                 proof,
                 common::MS_PER_DAY + 1
             ),
-            DispatchError::Module{ index: 5, error: 6, message: Some("InvalidPreCommitProof")}
+            DispatchError::Module {
+                index: 5,
+                error: 6,
+                message: Some("InvalidPreCommitProof")
+            }
         );
 
         // happy
@@ -379,7 +422,11 @@ fn pre_commit_commit_fail_from_another_acc() {
                 proof,
                 common::MS_PER_DAY + 1
             ),
-            DispatchError::Module{ index: 5, error: 5, message: Some("NotOwnerOfPreCommit") }
+            DispatchError::Module {
+                index: 5,
+                error: 5,
+                message: Some("NotOwnerOfPreCommit")
+            }
         );
     });
 }
@@ -390,7 +437,8 @@ fn pre_commit_commit_bucket_gets_determined_correctly() {
     new_test_ext().execute_with(|| {
         let current_block: <Test as frame_system::Config>::BlockNumber = 1;
         let expected_evict_bucket: <Test as frame_system::Config>::BlockNumber =
-            crate::PRE_COMMIT_EXPIRATION_DURATION_BLOCKS as u64 * crate::PRE_COMMIT_EVICTION_BUCKET_MULTIPLIER as u64;
+            crate::PRE_COMMIT_EXPIRATION_DURATION_BLOCKS as u64
+                * crate::PRE_COMMIT_EVICTION_BUCKET_MULTIPLIER as u64;
         assert_eq!(
             Ok(expected_evict_bucket),
             Anchors::determine_pre_commit_eviction_bucket(current_block)
@@ -618,7 +666,11 @@ fn pre_commit_and_then_evict() {
                 Origin::signed(1),
                 Anchors::determine_pre_commit_eviction_bucket(block_height_0).unwrap()
             ),
-            DispatchError::Module{ index: 5, error: 10, message: Some("EvictionNotPossible") }
+            DispatchError::Module {
+                index: 5,
+                error: 10,
+                message: Some("EvictionNotPossible")
+            }
         );
 
         // test that eviction works after expiration time
@@ -631,9 +683,15 @@ fn pre_commit_and_then_evict() {
         assert_eq!(a.signing_root, signing_root);
 
         //do check counts, evict, check counts again
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap(), 1);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap(),
+            1
+        );
         assert_ok!(Anchors::evict_pre_commits(Origin::signed(1), bucket_1));
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap_or_default(),
+            0
+        );
 
         // after eviction, the pre-commit data not findable
         let a_evicted = Anchors::get_pre_commit(anchor_id_0).unwrap_or_default();
@@ -641,9 +699,15 @@ fn pre_commit_and_then_evict() {
         assert_eq!(a_evicted.expiration_block, 0);
 
         let bucket_2 = Anchors::determine_pre_commit_eviction_bucket(block_height_1).unwrap();
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_2).unwrap(), 2);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_2).unwrap(),
+            2
+        );
         assert_ok!(Anchors::evict_pre_commits(Origin::signed(1), bucket_2));
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_2).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_2).unwrap_or_default(),
+            0
+        );
     });
 }
 
@@ -697,7 +761,11 @@ fn pre_commit_at_7999_and_then_evict_before_expire_and_collaborator_succeed_comm
                 proof,
                 common::MS_PER_DAY + 1
             ),
-           DispatchError::Module{ index: 5, error: 5, message: Some("NotOwnerOfPreCommit") }
+            DispatchError::Module {
+                index: 5,
+                error: 5,
+                message: Some("NotOwnerOfPreCommit")
+            }
         );
     });
 }
@@ -723,14 +791,23 @@ fn pre_commit_and_then_evict_larger_than_max_evict() {
         let bucket_1 = Anchors::determine_pre_commit_eviction_bucket(block_height_0).unwrap();
 
         //do check counts, evict, check counts again
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap(), 506);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap(),
+            506
+        );
         assert_ok!(Anchors::evict_pre_commits(Origin::signed(1), bucket_1));
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap(), 6);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap(),
+            6
+        );
 
         // evict again, now should be empty
         System::set_block_number(block_height_1 + 1);
         assert_ok!(Anchors::evict_pre_commits(Origin::signed(1), bucket_1));
-        assert_eq!(Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_pre_commits_count_in_evict_bucket(bucket_1).unwrap_or_default(),
+            0
+        );
     });
 }
 // #### End Pre Commit Eviction Tests
@@ -743,17 +820,26 @@ fn anchor_evict_single_anchor_per_day_1000_days() {
         let mut anchors = vec![];
         let verify_anchor_eviction = |day: usize, anchors: &Vec<H256>| {
             assert!(Anchors::get_anchor_by_id(anchors[day - 2]).is_none());
-            assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), (day - 1) as u64);
+            assert_eq!(
+                Anchors::get_latest_evicted_anchor_index().unwrap(),
+                (day - 1) as u64
+            );
             assert_eq!(
                 Anchors::get_anchor_id_by_index((day - 1) as u64).unwrap_or_default(),
                 H256([0; 32])
             );
             assert!(Anchors::get_evicted_anchor_root_by_day((day - 1) as u32).unwrap() != [0; 32]);
-            assert_eq!(Anchors::get_anchor_evict_date(anchors[day - 2]).unwrap_or_default(), 0);
+            assert_eq!(
+                Anchors::get_anchor_evict_date(anchors[day - 2]).unwrap_or_default(),
+                0
+            );
         };
         let verify_next_anchor_after_eviction = |day: usize, anchors: &Vec<H256>| {
             assert!(Anchors::get_anchor_by_id(anchors[day - 1]).is_some());
-            assert_eq!(Anchors::get_anchor_id_by_index(day as u64).unwrap(), anchors[day - 1]);
+            assert_eq!(
+                Anchors::get_anchor_id_by_index(day as u64).unwrap(),
+                anchors[day - 1]
+            );
             assert_eq!(
                 Anchors::get_anchor_evict_date(anchors[day - 1]).unwrap(),
                 (day + 1) as u32
@@ -765,7 +851,8 @@ fn anchor_evict_single_anchor_per_day_1000_days() {
             let random_seed = <pallet_randomness_collective_flip::Pallet<Test>>::random_seed();
             let pre_image =
                 (random_seed, i).using_encoded(<Test as frame_system::Config>::Hashing::hash);
-            let anchor_id = (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
+            let anchor_id =
+                (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
 
             assert_ok!(Anchors::commit(
                 Origin::signed(1),
@@ -778,8 +865,14 @@ fn anchor_evict_single_anchor_per_day_1000_days() {
             assert!(Anchors::get_anchor_by_id(anchor_id).is_some());
             assert_eq!(Anchors::get_latest_anchor_index().unwrap(), i + 1);
             assert_eq!(Anchors::get_anchor_id_by_index(i + 1).unwrap(), anchor_id);
-            assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap_or_default(), 0);
-            assert_eq!(Anchors::get_anchor_evict_date(anchor_id).unwrap(), (i + 2) as u32);
+            assert_eq!(
+                Anchors::get_latest_evicted_anchor_index().unwrap_or_default(),
+                0
+            );
+            assert_eq!(
+                Anchors::get_anchor_evict_date(anchor_id).unwrap(),
+                (i + 2) as u32
+            );
 
             anchors.push(anchor_id);
         }
@@ -831,8 +924,14 @@ fn anchor_evict_single_anchor_per_day_1000_days() {
         // 600th anchors` indexes have been removed
         // 600th anchor
         assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), 600);
-        assert_eq!(Anchors::get_anchor_id_by_index(600).unwrap_or_default(), H256([0; 32]));
-        assert_eq!(Anchors::get_anchor_evict_date(anchors[599]).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(600).unwrap_or_default(),
+            H256([0; 32])
+        );
+        assert_eq!(
+            Anchors::get_anchor_evict_date(anchors[599]).unwrap_or_default(),
+            0
+        );
         // 601st anchor indexes are left
         assert!(Anchors::get_anchor_id_by_index(601).unwrap() != H256([0; 32]));
         assert_eq!(Anchors::get_anchor_evict_date(anchors[600]).unwrap(), 602);
@@ -841,8 +940,14 @@ fn anchor_evict_single_anchor_per_day_1000_days() {
         assert_ok!(Anchors::evict_anchors(Origin::signed(1)));
         // verify that 521st anchors indexes are removed since we called a second time
         assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), 601);
-        assert_eq!(Anchors::get_anchor_id_by_index(601).unwrap_or_default(), H256([0; 32]));
-        assert_eq!(Anchors::get_anchor_evict_date(anchors[600]).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(601).unwrap_or_default(),
+            H256([0; 32])
+        );
+        assert_eq!(
+            Anchors::get_anchor_evict_date(anchors[600]).unwrap_or_default(),
+            0
+        );
 
         // remove remaining anchors
         <pallet_timestamp::Pallet<Test>>::set_timestamp(day(1001));
@@ -850,8 +955,14 @@ fn anchor_evict_single_anchor_per_day_1000_days() {
         assert_ok!(Anchors::evict_anchors(Origin::signed(1)));
         assert!(Anchors::get_anchor_by_id(anchors[999]).is_none());
         assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), 1000);
-        assert_eq!(Anchors::get_anchor_id_by_index(1000).unwrap_or_default(), H256([0; 32]));
-        assert_eq!(Anchors::get_anchor_evict_date(anchors[999]).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(1000).unwrap_or_default(),
+            H256([0; 32])
+        );
+        assert_eq!(
+            Anchors::get_anchor_evict_date(anchors[999]).unwrap_or_default(),
+            0
+        );
     });
 }
 
@@ -918,7 +1029,8 @@ fn test_same_day_1001_anchors() {
             let random_seed = <pallet_randomness_collective_flip::Pallet<Test>>::random_seed();
             let pre_image =
                 (random_seed, i).using_encoded(<Test as frame_system::Config>::Hashing::hash);
-            let anchor_id = (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
+            let anchor_id =
+                (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
             assert_ok!(Anchors::commit(
                 Origin::signed(1),
                 pre_image,
@@ -937,8 +1049,14 @@ fn test_same_day_1001_anchors() {
         assert_ok!(Anchors::evict_anchors(Origin::signed(1)));
         assert!(Anchors::get_anchor_by_id(anchors[999]).is_none());
         assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), 500);
-        assert_eq!(Anchors::get_anchor_id_by_index(500).unwrap_or_default(), H256([0; 32]));
-        assert_eq!(Anchors::get_anchor_evict_date(anchors[499]).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(500).unwrap_or_default(),
+            H256([0; 32])
+        );
+        assert_eq!(
+            Anchors::get_anchor_evict_date(anchors[499]).unwrap_or_default(),
+            0
+        );
         assert_eq!(
             Anchors::get_evicted_anchor_root_by_day(2).unwrap(),
             [
@@ -950,14 +1068,26 @@ fn test_same_day_1001_anchors() {
         // second 500
         assert_ok!(Anchors::evict_anchors(Origin::signed(1)));
         assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), 1000);
-        assert_eq!(Anchors::get_anchor_id_by_index(1000).unwrap_or_default(), H256([0; 32]));
-        assert_eq!(Anchors::get_anchor_evict_date(anchors[999]).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(1000).unwrap_or_default(),
+            H256([0; 32])
+        );
+        assert_eq!(
+            Anchors::get_anchor_evict_date(anchors[999]).unwrap_or_default(),
+            0
+        );
 
         // remaining
         assert_ok!(Anchors::evict_anchors(Origin::signed(1)));
         assert_eq!(Anchors::get_latest_evicted_anchor_index().unwrap(), 1001);
-        assert_eq!(Anchors::get_anchor_id_by_index(1001).unwrap_or_default(), H256([0; 32]));
-        assert_eq!(Anchors::get_anchor_evict_date(anchors[1000]).unwrap_or_default(), 0);
+        assert_eq!(
+            Anchors::get_anchor_id_by_index(1001).unwrap_or_default(),
+            H256([0; 32])
+        );
+        assert_eq!(
+            Anchors::get_anchor_evict_date(anchors[1000]).unwrap_or_default(),
+            0
+        );
 
         // all done
         assert_ok!(Anchors::evict_anchors(Origin::signed(1)));
@@ -981,7 +1111,8 @@ fn basic_commit_perf() {
             let random_seed = <pallet_randomness_collective_flip::Pallet<Test>>::random_seed();
             let pre_image =
                 (random_seed, i).using_encoded(<Test as frame_system::Config>::Hashing::hash);
-            let anchor_id = (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
+            let anchor_id =
+                (pre_image).using_encoded(<Test as frame_system::Config>::Hashing::hash);
             let (doc_root, signing_root, proof) = Test::test_document_hashes();
 
             // happy

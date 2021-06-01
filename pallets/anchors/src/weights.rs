@@ -1,4 +1,4 @@
-use frame_support::{weights::Weight};
+use frame_support::weights::Weight;
 
 /// Weight functions needed for Fees.
 pub trait WeightInfo {

@@ -1,12 +1,14 @@
 //! Some configurable implementations as associated type for the substrate runtime.
 
+use crate::{Authorship, Balances, NegativeImbalance};
+use frame_support::traits::{Currency, Imbalance, OnUnbalanced};
+use frame_support::weights::{
+    WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
+};
 use node_primitives::Balance;
-use sp_runtime::traits::Convert;
-use frame_support::traits::{Imbalance, Currency, OnUnbalanced};
-use crate::{Balances, Authorship, NegativeImbalance};
-use frame_support::weights::{WeightToFeeCoefficient, WeightToFeePolynomial, WeightToFeeCoefficients};
 use smallvec::smallvec;
 use sp_arithmetic::Perbill;
+use sp_runtime::traits::Convert;
 
 pub struct DealWithFees;
 impl OnUnbalanced<NegativeImbalance> for DealWithFees {
@@ -20,15 +22,21 @@ impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 pub struct CurrencyToVoteHandler;
 
 impl CurrencyToVoteHandler {
-	fn factor() -> Balance { (Balances::total_issuance() / u64::max_value() as Balance).max(1) }
+    fn factor() -> Balance {
+        (Balances::total_issuance() / u64::max_value() as Balance).max(1)
+    }
 }
 
 impl Convert<Balance, u64> for CurrencyToVoteHandler {
-	fn convert(x: Balance) -> u64 { (x / Self::factor()) as u64 }
+    fn convert(x: Balance) -> u64 {
+        (x / Self::factor()) as u64
+    }
 }
 
 impl Convert<u128, Balance> for CurrencyToVoteHandler {
-	fn convert(x: u128) -> Balance { x * Self::factor() }
+    fn convert(x: u128) -> Balance {
+        x * Self::factor()
+    }
 }
 
 /// Handles converting a weight scalar to a fee value, based on the scale and granularity of the
@@ -61,14 +69,14 @@ impl Convert<u128, Balance> for CurrencyToVoteHandler {
 /// ```
 pub struct WeightToFee;
 impl WeightToFeePolynomial for WeightToFee {
-	type Balance = Balance;
+    type Balance = Balance;
 
-	fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-		smallvec!(WeightToFeeCoefficient {
-			coeff_integer: 315000,
-			coeff_frac: Perbill::zero(),
-			negative: false,
-			degree: 1,
-		})
-	}
+    fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
+        smallvec!(WeightToFeeCoefficient {
+            coeff_integer: 315000,
+            coeff_frac: Perbill::zero(),
+            negative: false,
+            degree: 1,
+        })
+    }
 }

@@ -1,8 +1,5 @@
-use crate::{mock::*};
-use frame_support::{
-    assert_ok, assert_noop,
-    dispatch::DispatchError
-};
+use crate::mock::*;
+use frame_support::{assert_noop, assert_ok, dispatch::DispatchError};
 use sp_runtime::traits::{BadOrigin, Hash};
 
 #[test]
@@ -23,9 +20,9 @@ fn multiple_new_fees_are_setable() {
         let price2: <Test as pallet_balances::Config>::Balance = 777;
 
         assert_noop!(
-                Fees::set_fee(Origin::signed(2), fee_key1, price1),
-                BadOrigin
-            );
+            Fees::set_fee(Origin::signed(2), fee_key1, price1),
+            BadOrigin
+        );
         assert_ok!(Fees::set_fee(Origin::signed(1), fee_key1, price1));
         assert_ok!(Fees::set_fee(Origin::signed(1), fee_key2, price2));
 
@@ -50,9 +47,9 @@ fn fee_is_re_setable() {
 
         let new_price: <Test as pallet_balances::Config>::Balance = 777;
         assert_noop!(
-                Fees::set_fee(Origin::signed(2), fee_key, new_price),
-                BadOrigin
-            );
+            Fees::set_fee(Origin::signed(2), fee_key, new_price),
+            BadOrigin
+        );
         assert_ok!(Fees::set_fee(Origin::signed(1), fee_key, new_price));
         let again_loaded_fee = Fees::fee(fee_key).unwrap();
         assert_eq!(again_loaded_fee.price, new_price);
@@ -69,10 +66,11 @@ fn fee_payment_errors_if_not_set() {
         assert_noop!(
             Fees::pay_fee(1, fee_key),
             DispatchError::Module {
-                    index: 3,
-                    error: 0,
-                    message: Some("FeeNotFoundForKey"),
-                });
+                index: 3,
+                error: 0,
+                message: Some("FeeNotFoundForKey"),
+            }
+        );
 
         assert_ok!(Fees::set_fee(Origin::signed(1), fee_key, fee_price));
 
@@ -84,13 +82,13 @@ fn fee_payment_errors_if_not_set() {
 
         // second time paying will lead to account having insufficient balance
         assert_noop!(
-                Fees::pay_fee(1, fee_key),
-                DispatchError::Module {
-                    index: 2,
-                    error: 2,
-                    message: Some("InsufficientBalance"),
-                }
-            );
+            Fees::pay_fee(1, fee_key),
+            DispatchError::Module {
+                index: 2,
+                error: 2,
+                message: Some("InsufficientBalance"),
+            }
+        );
     });
 }
 
@@ -104,13 +102,13 @@ fn fee_payment_errors_if_insufficient_balance() {
 
         // account 3 is not endowed in the test setup
         assert_noop!(
-                Fees::pay_fee(3, fee_key),
-                DispatchError::Module {
-                    index: 2,
-                    error: 2,
-                    message: Some("InsufficientBalance"),
-                }
-            );
+            Fees::pay_fee(3, fee_key),
+            DispatchError::Module {
+                index: 2,
+                error: 2,
+                message: Some("InsufficientBalance"),
+            }
+        );
     });
 }
 
@@ -127,13 +125,13 @@ fn fee_payment_subtracts_fees_from_account() {
 
         //second time paying will lead to account having insufficient balance
         assert_noop!(
-                Fees::pay_fee(1, fee_key),
-                DispatchError::Module {
-                    index: 2,
-                    error: 2,
-                    message: Some("InsufficientBalance"),
-                }
-            );
+            Fees::pay_fee(1, fee_key),
+            DispatchError::Module {
+                index: 2,
+                error: 2,
+                message: Some("InsufficientBalance"),
+            }
+        );
     });
 }
 
@@ -172,12 +170,12 @@ fn fee_burn_fee_from_account() {
 
         //second time burn will lead to account having insufficient balance
         assert_noop!(
-                Fees::burn_fee(&100, account_new_balance + 1),
-                DispatchError::Module {
-                    index: 2,
-                    error: 2,
-                    message: Some("InsufficientBalance"),
-                }
-            );
+            Fees::burn_fee(&100, account_new_balance + 1),
+            DispatchError::Module {
+                index: 2,
+                error: 2,
+                message: Some("InsufficientBalance"),
+            }
+        );
     });
 }

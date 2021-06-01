@@ -1,13 +1,13 @@
-use sp_core::H256;
+use crate::{self as anchors, *};
 use frame_support::parameter_types;
-use sp_runtime::{traits::{BlakeTwo256, IdentityLookup}, testing::Header};
-use crate::{
-    self as anchors,
-    *,
-};
+use frame_support::traits::SortedMembers;
 use frame_support::{traits::FindAuthor, ConsensusEngineId};
 use frame_system::EnsureSignedBy;
-use frame_support::traits::{SortedMembers};
+use sp_core::H256;
+use sp_runtime::{
+    testing::Header,
+    traits::{BlakeTwo256, IdentityLookup},
+};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -15,18 +15,18 @@ type Balance = u64;
 
 // For testing the pallet, we construct a mock runtime.
 frame_support::construct_runtime!(
-	pub enum Test where
-		Block = Block,
-		NodeBlock = Block,
-		UncheckedExtrinsic = UncheckedExtrinsic,
-	{
-		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+    pub enum Test where
+        Block = Block,
+        NodeBlock = Block,
+        UncheckedExtrinsic = UncheckedExtrinsic,
+    {
+        System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
         Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
         Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent},
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+        Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
         Fees: pallet_fees::{Pallet, Call, Config<T>, Storage, Event<T>},
         Anchors: anchors::{Pallet, Call, Config, Storage},
-	}
+    }
 );
 
 parameter_types! {
@@ -77,8 +77,8 @@ pub struct AuthorGiven;
 
 impl FindAuthor<u64> for AuthorGiven {
     fn find_author<'a, I>(_digests: I) -> Option<u64>
-        where
-            I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+    where
+        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
     {
         Some(100)
     }
@@ -91,7 +91,7 @@ impl pallet_authorship::Config for Test {
     type EventHandler = ();
 }
 
-impl pallet_timestamp::Config for Test{
+impl pallet_timestamp::Config for Test {
     type Moment = u64;
     type OnTimestampSet = ();
     type MinimumPeriod = ();
@@ -102,7 +102,7 @@ parameter_types! {
     pub const One: u64 = 1;
 }
 
-impl SortedMembers<u64> for One{
+impl SortedMembers<u64> for One {
     fn sorted_members() -> Vec<u64> {
         vec![1]
     }
@@ -132,32 +132,36 @@ impl Test {
                 238, 250, 118, 84, 35, 55, 212, 193, 69, 104, 25, 244, 240, 31, 54, 36, 85, 171,
                 12, 71, 247, 81, 74, 10, 127, 127, 185, 158, 253, 100, 206, 130,
             ]
-                .into(),
+            .into(),
             // signing root
             [
                 63, 39, 76, 249, 122, 12, 22, 110, 110, 63, 161, 193, 10, 51, 83, 226, 96, 179,
                 203, 22, 42, 255, 135, 63, 160, 26, 73, 222, 175, 198, 94, 200,
             ]
-                .into(),
+            .into(),
             // proof hash
             [
                 192, 195, 141, 209, 99, 91, 39, 154, 243, 6, 188, 4, 144, 5, 89, 252, 52, 105, 112,
                 173, 143, 101, 65, 6, 191, 206, 210, 2, 176, 103, 161, 14,
             ]
-                .into(),
+            .into(),
         )
     }
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+    let mut t = frame_system::GenesisConfig::default()
+        .build_storage::<Test>()
+        .unwrap();
 
     // pre-fill balances
     // 100 is the block author
     pallet_balances::GenesisConfig::<Test> {
         balances: vec![(1, 100000), (2, 100000), (100, 100)],
-    }.assimilate_storage(&mut t).unwrap();
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
 
     // fees genesis
     use frame_support::traits::GenesisBuild;
@@ -171,6 +175,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
             // state rent 0 for tests
             0,
         )],
-    }.assimilate_storage(&mut t).unwrap();
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
     t.into()
 }

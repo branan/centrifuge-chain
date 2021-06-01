@@ -12,7 +12,6 @@ pub mod currency {
     pub const fn deposit(items: u32, bytes: u32) -> Balance {
         items as Balance * 15 * CENTI_RAD + (bytes as Balance) * 6 * CENTI_RAD
     }
-
 }
 
 /// Time.
