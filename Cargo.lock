@@ -146,6 +146,7 @@ dependencies = [
  "pallet-im-online",
  "pallet-indices",
  "pallet-membership",
+ "pallet-migration-manager",
  "pallet-multisig",
  "pallet-offences",
  "pallet-proxy",
