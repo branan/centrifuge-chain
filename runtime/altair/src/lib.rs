@@ -620,7 +620,7 @@ impl pallet_claims::Config for Runtime {
 
 parameter_types! {
 	pub const MigrationMaxAccounts: u32 = 100;
-	pub const MigrationMaxVestings: u32 = 10;
+	pub const MigrationMaxVestings: u32 = 5;
 	pub const MigrationMaxProxies: u32 = 10;
 }
 
