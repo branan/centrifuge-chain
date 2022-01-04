@@ -128,6 +128,9 @@ pub mod types {
 	/// A representation of ClassId for Uniques
 	pub type ClassId = u64;
 
+	/// A representation of a tranche identifier
+	pub type TrancheId = u8;
+
 	/// A representation of InstanceId for Uniques.
 	#[derive(
 		codec::Encode,
@@ -146,7 +149,7 @@ pub mod types {
 
 	bitflags::bitflags! {
 		#[derive(codec::Encode, codec::Decode,  TypeInfo)]
-		pub struct StoragePoolRoles: u32 {
+		pub struct AdminPoolRoles: u32 {
 			const POOL_ADMIN = 0b00000001;
 			const BORROWER  = 0b00000010;
 			const PRICING_ADMIN = 0b00000100;
@@ -154,6 +157,12 @@ pub mod types {
 			const MEMBER_LIST_ADMIN = 0b00010000;
 			const RISK_ADMIN = 0b00100000;
 		}
+	}
+
+	#[derive(codec::Encode, codec::Decode, TypeInfo, Clone, Eq, PartialEq, Debug)]
+	pub struct PermissionRoles {
+		pub(crate) admin: AdminPoolRoles,
+		pub(crate) tranches: Vec<TrancheId>,
 	}
 }
 
