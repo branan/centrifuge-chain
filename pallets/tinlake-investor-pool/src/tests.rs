@@ -1,6 +1,7 @@
 use super::*;
 use crate::mock::*;
 use frame_support::{assert_noop, assert_ok};
+use pallet_permissions::Permissions as PermissionsT;
 use primitives_tokens::CurrencyId;
 use sp_runtime::traits::{One, Zero};
 use sp_runtime::Perquintill;
@@ -279,6 +280,22 @@ fn epoch() {
 		let borrower = 3;
 		let pool_account = Origin::signed(PoolLocator { pool_id: 0 }.into_account());
 
+		<<Test as Config>::Permission as PermissionsT<u64>>::add_permission(
+			0,
+			ensure_signed(pool_owner.clone()).unwrap(),
+			PoolRole::PoolAdmin,
+		);
+		<<Test as Config>::Permission as PermissionsT<u64>>::add_permission(
+			0,
+			ensure_signed(drop_investor.clone()).unwrap(),
+			PoolRole::TrancheInvestor(1),
+		);
+		<<Test as Config>::Permission as PermissionsT<u64>>::add_permission(
+			0,
+			ensure_signed(tin_investor.clone()).unwrap(),
+			PoolRole::TrancheInvestor(2),
+		);
+
 		// Initialize pool with initial investments
 		assert_ok!(TinlakeInvestorPool::create_pool(
 			pool_owner.clone(),
@@ -290,13 +307,13 @@ fn epoch() {
 		assert_ok!(TinlakeInvestorPool::order_supply(
 			tin_investor.clone(),
 			0,
-			1,
+			2,
 			500 * CURRENCY
 		));
 		assert_ok!(TinlakeInvestorPool::order_supply(
 			drop_investor.clone(),
 			0,
-			0,
+			1,
 			500 * CURRENCY
 		));
 		assert_ok!(TinlakeInvestorPool::close_epoch(pool_owner.clone(), 0));
@@ -389,6 +406,13 @@ fn epoch() {
 fn test_approve_and_remove_roles() {
 	new_test_ext().execute_with(|| {
 		let pool_owner = 1;
+
+		<<Test as Config>::Permission as PermissionsT<u64>>::add_permission(
+			0,
+			pool_owner,
+			PoolRole::PoolAdmin,
+		);
+
 		// Initialize pool with initial investments
 		assert_ok!(TinlakeInvestorPool::create_pool(
 			Origin::signed(pool_owner),
@@ -402,9 +426,9 @@ fn test_approve_and_remove_roles() {
 		assert!(<TinlakeInvestorPool as PoolInspect<u64>>::pool_exists(
 			pool_id
 		));
-		assert!(<TinlakeInvestorPool as PoolInspect<u64>>::has_role(
+		assert!(<Test as Config>::Permission::clearance(
 			pool_id,
-			&pool_owner,
+			pool_owner,
 			PoolRole::PoolAdmin
 		));
 
@@ -426,8 +450,8 @@ fn test_approve_and_remove_roles() {
 				.collect();
 
 			targets.iter().for_each(|acc| {
-				assert!(!<TinlakeInvestorPool as PoolInspect<u64>>::has_role(
-					pool_id, acc, role
+				assert!(!<Test as Config>::Permission::clearance(
+					pool_id, *acc, role
 				))
 			});
 
@@ -441,9 +465,7 @@ fn test_approve_and_remove_roles() {
 
 			// they should have role now
 			targets.iter().for_each(|acc| {
-				assert!(<TinlakeInvestorPool as PoolInspect<u64>>::has_role(
-					pool_id, acc, role
-				))
+				assert!(<Test as Config>::Permission::clearance(pool_id, *acc, role))
 			});
 
 			sources.iter().for_each(|source| {
@@ -458,8 +480,8 @@ fn test_approve_and_remove_roles() {
 
 			// they should not have role now
 			targets.iter().for_each(|acc| {
-				assert!(!<TinlakeInvestorPool as PoolInspect<u64>>::has_role(
-					pool_id, acc, role
+				assert!(!<Test as Config>::Permission::clearance(
+					pool_id, *acc, role
 				))
 			});
 		}
