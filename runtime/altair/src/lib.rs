@@ -849,20 +849,20 @@ impl
 		let (_editor, maybe_role, _pool, role) = t;
 		if let Some(with_role) = maybe_role {
 			match *with_role {
-				Role::PoolRole(PoolRole::PoolAdmin) => match *role {
+				Role::PoolRole(PoolRole::PoolAdmin) => !matches!(
+					*role,
 					// PoolAdmins can manage all other admins, but not tranche investors
-					Role::PoolRole(PoolRole::TrancheInvestor(_, _)) => false,
-					_ => true,
-				},
-				Role::PoolRole(PoolRole::MemberListAdmin) => match *role {
+					Role::PoolRole(PoolRole::TrancheInvestor(_, _))
+				),
+				Role::PoolRole(PoolRole::MemberListAdmin) => matches!(
+					*role,
 					// MemberlistAdmins can manage tranche investors
-					Role::PoolRole(PoolRole::TrancheInvestor(_, _)) => true,
-					_ => false,
-				},
-				Role::PermissionedCurrencyRole(PermissionedCurrencyRole::Manager) => match *role {
-					Role::PermissionedCurrencyRole(PermissionedCurrencyRole::Holder(_)) => true,
-					_ => false,
-				},
+					Role::PoolRole(PoolRole::TrancheInvestor(_, _))
+				),
+				Role::PermissionedCurrencyRole(PermissionedCurrencyRole::Manager) => matches!(
+					*role,
+					Role::PermissionedCurrencyRole(PermissionedCurrencyRole::Holder(_))
+				),
 				_ => false,
 			}
 		} else {
@@ -1191,7 +1191,8 @@ impl Contains<Call> for BaseCallFilter {
 					unimplemented!()
 				}
 			},
-			Call::XTokens(method) => match method {
+			Call::XTokens(method) => !matches!(
+				method,
 				orml_xtokens::Call::transfer {
 					currency_id: CurrencyId::Tranche(_, _),
 					..
@@ -1205,10 +1206,8 @@ impl Contains<Call> for BaseCallFilter {
 				| orml_xtokens::Call::transfer_multiasset { .. }
 				| orml_xtokens::Call::transfer_multiasset_with_fee { .. }
 				| orml_xtokens::Call::transfer_multiassets { .. }
-				| orml_xtokens::Call::transfer_multicurrencies { .. } => false,
-				// Any other XTokens call is good to go
-				_ => true,
-			},
+				| orml_xtokens::Call::transfer_multicurrencies { .. }
+			),
 			_ => true,
 		}
 	}
