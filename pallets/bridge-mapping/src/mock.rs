@@ -49,7 +49,7 @@ frame_support::construct_runtime!(
 		Anchors: pallet_anchors::{Pallet, Call, Storage} = 5,
 		ChainBridge: chainbridge::{Pallet, Call, Storage, Event<T>} = 6,
 		Nft: pallet_nft::{Pallet, Call, Storage, Event<T>} = 7,
-		BridgeMapping: pallet_bridge_mapping::{Pallet, Call, Config, Storage} = 8,
+		BridgeMapping: pallet_bridge_mapping::{Pallet, Call, Storage} = 8,
 	}
 );
 
